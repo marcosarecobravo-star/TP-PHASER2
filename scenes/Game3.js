@@ -1,14 +1,14 @@
-export default class Game extends Phaser.Scene {
+export default class Game3 extends Phaser.Scene {
   constructor() {
-    super("game");
+    super("Game3");
   }
 
-  init() {
-    this.score = 0;
+  init(data) {
+    this.score = data.score || 0; // opcional: pasar puntaje
   }
 
   preload() {
-    this.load.tilemapTiledJSON("map", "public/assets/tilemap/map.json");
+    this.load.tilemapTiledJSON("map3", "public/assets/tilemap/map3.json");
     this.load.image("tileset", "public/assets/texture.png");
     this.load.image("star", "public/assets/star.png");
     this.load.image("meta", "public/assets/bomb.png");
@@ -20,7 +20,7 @@ export default class Game extends Phaser.Scene {
   }
 
   create() {
-    const map = this.make.tilemap({ key: "map" });
+    const map = this.make.tilemap({ key: "map3" });
 
     // Parameters are the name you gave the tileset in Tiled and then the key of the tileset image in
     // Phaser's cache (i.e. the name you used in preload)
@@ -30,7 +30,6 @@ export default class Game extends Phaser.Scene {
     const belowLayer = map.createLayer("Fondo", tileset, 0, 0);
     const platformLayer = map.createLayer("Plataformas", tileset, 0, 0);
     const objectsLayer = map.getObjectLayer("Objetos");
-
     // Find in the Object Layer, the name "dude" and get position
     const spawnPoint = map.findObject(
       "Objetos",
@@ -114,10 +113,11 @@ export default class Game extends Phaser.Scene {
     // add overlap between stars and platform layer
     this.physics.add.collider(this.stars, platformLayer);
 
-    this.scoreText = this.add.text(16, 16, `objetos: ${this.score} de 5`, {
+    this.scoreText = this.add.text(16, 16, `objetos: ${this.score} de 15`, {
       fontSize: "32px",
       fill: "#000",
     });
+    this.scoreText.setScrollFactor(0);
     this.physics.add.overlap(
       this.player,
       this.goal,
@@ -126,9 +126,16 @@ export default class Game extends Phaser.Scene {
       this
     );
     this.totalStars = objectsLayer.objects.filter(o => o.type === "star").length;
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    //camara sigue al jugador
+    this.cameras.main.startFollow(this.player);
+    //limites de la camara
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.gameWon = false;
   }
 
   update() {
+    if (this.gameWon) return;
     this.player.setVelocity(0);
     const speed = 160;
     // update game objects
@@ -151,16 +158,31 @@ export default class Game extends Phaser.Scene {
       this.player.setVelocityY(speed);
     }
   }
-
   collectStar(player, star) {
     star.disableBody(true, true);
 
     this.score += 1;
-    this.scoreText.setText(`objetos: ${this.score} de 5`);
+    this.scoreText.setText(`objetos: ${this.score} de 15`);
   }
   reachGoal(player, goal) {
-    if (this.score >= 5) {
-      this.scene.start("Game2", { score: this.score });
-    }//this.totalStars
+    if (this.score >= 15) {
+      this.gameWon = true;
+
+    // detener jugador
+    this.player.setVelocity(0);
+    this.player.body.enable = false;
+
+    // mostrar texto en pantalla
+    this.add.text(
+      this.cameras.main.centerX,
+      this.cameras.main.centerY,
+      "GANASTE",
+      {
+        fontSize: "64px",
+        fill: "#00ff00",
+        fontStyle: "bold"
+      }
+    ).setOrigin(0.5).setScrollFactor(0);
+    }
   }
 }

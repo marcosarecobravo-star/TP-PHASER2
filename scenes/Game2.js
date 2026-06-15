@@ -1,14 +1,14 @@
-export default class Game extends Phaser.Scene {
+export default class Game2 extends Phaser.Scene {
   constructor() {
-    super("game");
+    super("Game2");
   }
 
-  init() {
-    this.score = 0;
+  init(data) {
+    this.score = data.score || 0; // opcional: pasar puntaje
   }
 
   preload() {
-    this.load.tilemapTiledJSON("map", "public/assets/tilemap/map.json");
+    this.load.tilemapTiledJSON("map2", "public/assets/tilemap/map2.json");
     this.load.image("tileset", "public/assets/texture.png");
     this.load.image("star", "public/assets/star.png");
     this.load.image("meta", "public/assets/bomb.png");
@@ -20,7 +20,7 @@ export default class Game extends Phaser.Scene {
   }
 
   create() {
-    const map = this.make.tilemap({ key: "map" });
+    const map = this.make.tilemap({ key: "map2" });
 
     // Parameters are the name you gave the tileset in Tiled and then the key of the tileset image in
     // Phaser's cache (i.e. the name you used in preload)
@@ -114,7 +114,7 @@ export default class Game extends Phaser.Scene {
     // add overlap between stars and platform layer
     this.physics.add.collider(this.stars, platformLayer);
 
-    this.scoreText = this.add.text(16, 16, `objetos: ${this.score} de 5`, {
+    this.scoreText = this.add.text(16, 16, `objetos: ${this.score} de 10`, {
       fontSize: "32px",
       fill: "#000",
     });
@@ -151,16 +151,15 @@ export default class Game extends Phaser.Scene {
       this.player.setVelocityY(speed);
     }
   }
-
   collectStar(player, star) {
     star.disableBody(true, true);
 
     this.score += 1;
-    this.scoreText.setText(`objetos: ${this.score} de 5`);
+    this.scoreText.setText(`objetos: ${this.score} de 10`);
   }
   reachGoal(player, goal) {
-    if (this.score >= 5) {
-      this.scene.start("Game2", { score: this.score });
-    }//this.totalStars
+    if (this.score >= 10) {
+      this.scene.start("Game3", { score: this.score });
+    }
   }
 }
